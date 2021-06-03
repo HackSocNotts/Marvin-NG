@@ -35,6 +35,8 @@ namespace MarvinNG
             var client = new MongoClient(new MongoUrl(mongoUrl));
             var database = client.GetDatabase(mongoCollection);
             collection = database.GetCollection<BsonDocument>("members");
+
+            helpChannel = Convert.ToUInt64(Environment.GetEnvironmentVariable("helpChannel"));
         }
 
 
@@ -42,6 +44,7 @@ namespace MarvinNG
         {
             // Hook the MessageReceived event into our command handler
             _client.MessageReceived += HandleCommandAsync;
+            _client.UserJoined += HandleMemberJoin;
 
             await _commands.AddModuleAsync<Commands._Nuke>(null);
             await _commands.AddModuleAsync<Commands._Verify>(null);
@@ -75,6 +78,16 @@ namespace MarvinNG
                 services: null);
         }
 
+        private async Task HandleMemberJoin(SocketGuildUser user){
+            await user.SendMessageAsync($@"Hi <@{user.Id}> :wave:
+Thanks for joining the HackSoc Discord Server!
+To get started you need to verify your membership with me.
+Please respond with verify followed by your student ID number (for example `verify 12312123`) so I can verify that you are a HackSoc member.
+If you believe this is in error, or something goes wrong, please raise a ticket in <#{helpChannel}> for help.
+Thanks,
+The Committee");
+        }
+
 
         private DiscordSocketClient _client;
         private CommandService _commands;
@@ -83,6 +96,8 @@ namespace MarvinNG
         public static IMongoCollection<BsonDocument> collection;
         public static SocketRole memberRole;
         public static SocketGuild server;
+
+        public static ulong helpChannel;
         public async Task Run()
         {
             await loginAwaiter;
