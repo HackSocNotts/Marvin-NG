@@ -78,7 +78,8 @@ namespace MarvinNG
                 services: null);
         }
 
-        private async Task HandleMemberJoin(SocketGuildUser user){
+        private async Task HandleMemberJoin(SocketGuildUser user)
+        {
             await user.SendMessageAsync($@"Hi <@{user.Id}> :wave:
 Thanks for joining the HackSoc Discord Server!
 To get started you need to verify your membership with me.
