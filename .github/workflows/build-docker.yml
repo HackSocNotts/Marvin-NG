@@ -18,7 +18,7 @@ jobs:
       - name: Prepare Tags
         id: prep
         run: |
-          DOCKER_IMAGE=ghcr.io/hacksocnotts/membership-scraper-ng
+          DOCKER_IMAGE=ghcr.io/hacksocnotts/marvin-ng
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
