@@ -129,8 +129,7 @@ namespace MarvinNG.Commands
                 return;
             }
             uid = Convert.ToUInt64(m.Value);
-            var id = Convert.ToUInt64(uid);
-            var u = Bot.server.GetUser(id);
+            var u = Bot.server.GetUser(uid);
             #endregion
 
             #region remove memberRole
