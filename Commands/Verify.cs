@@ -130,15 +130,13 @@ namespace MarvinNG.Commands
             }
             uid = Convert.ToUInt64(m.Value);
             var id = Convert.ToUInt64(uid);
-            u = Bot.server.GetUser(id);
+            var u = Bot.server.GetUser(id);
             #endregion
 
             #region remove memberRole
             if (u != null && u.Roles.Contains(Bot.memberRole))
                 await u.RemoveRoleAsync(Bot.memberRole);
             #endregion
-
-            #region remove user from datebase
 
             var filter = Builders<BsonDocument>.Filter.Eq("DiscordID", uid);
 
