@@ -83,35 +83,17 @@ namespace MarvinNG.Commands
         [Summary("Looks up A User")]
         public async Task Lookup(uint ID, string user = null)
         {
-            #region get user object
-            SocketGuildUser u;
-            if (user != null)
-            {
-                var m = regex.Match(user);
-                if (!m.Success)
-                {
-                    return;
-                }
-                var id = Convert.ToUInt64(m.Value);
-                u = Bot.server.GetUser(id);
-            }
-            else
-            {
-                u = Bot.server.GetUser(Context.Message.Author.Id);
-            }
-            #endregion
-
             #region Check Discord Account is not already verified
-            Console.WriteLine(Convert.ToString(u.Id));
-            var xs = Bot.collection.Find($"{{ DiscordID: '{u.Id}' }}");
+            Console.WriteLine(Convert.ToString(ID));
+            var xs = Bot.collection.Find($"{{ DiscordID: '{ID}' }}");
             if (xs.CountDocuments() != 0)
             {
                 var x = xs.First();
-                await Context.Message.ReplyAsync(String.Format("User <@{0}> is verified with StudentID {1}", u.Id, x["ID"].ToString()));
+                await Context.Message.ReplyAsync(String.Format("User <@{0}> is verified with StudentID {1}", ID, x["ID"].ToString()));
             }
             else
             {
-                await Context.Message.ReplyAsync(String.Format("User <@{0}> is not verified on this server!", u.Id));
+                await Context.Message.ReplyAsync(String.Format("User <@{0}> is not verified on this server!", ID));
             }
             #endregion
         }
