@@ -38,7 +38,8 @@ namespace MarvinNG
 
             var client = new MongoClient(new MongoUrl(mongoUrl));
             var database = client.GetDatabase(mongoCollection);
-            collection = database.GetCollection<BsonDocument>("members");
+            membersCollection = database.GetCollection<BsonDocument>("members");
+            discordCollection = database.GetCollection<BsonDocument>("members_discord");
 
             helpChannel = Convert.ToUInt64(Environment.GetEnvironmentVariable("helpChannel"));
         }
@@ -100,7 +101,7 @@ The Committee");
         private CommandService _commands;
         private Task loginAwaiter;
         private Task commandAwaiter;
-        public static IMongoCollection<BsonDocument> collection;
+        public static IMongoCollection<BsonDocument> membersCollection, discordCollection;
         public static SocketRole memberRole;
         public static SocketGuild server;
 

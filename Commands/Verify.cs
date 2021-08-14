@@ -46,7 +46,7 @@ namespace MarvinNG.Commands
 
             #region Check Discord Account is not already verified
             Console.WriteLine(Convert.ToString(u.Id));
-            var xs = Bot.collection.Find($"{{ DiscordID: '{u.Id}' }}");
+            var xs = Bot.discordCollection.Find($"{{ DiscordID: '{u.Id}' }}");
             if (xs.CountDocuments() != 0)
             {
                 var x = xs.First();
@@ -57,15 +57,15 @@ namespace MarvinNG.Commands
 
             #region Check StudentID is not already verified
             var filter = Builders<BsonDocument>.Filter.Eq("ID", ID);
-            xs = Bot.collection.Find(filter);
+            xs = Bot.membersCollection.Find(filter);
             if (xs.CountDocuments() == 0)
             {
                 await Context.Message.ReplyAsync($"Cannot Find User with ID {ID} amongst our records. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
                 return;
             }
-
             var y = xs.First();
-            if (!y["DiscordID"].IsBsonNull)
+            var zs = Bot.discordCollection.Find(filter);
+            if (zs.CountDocuments() != 0)
             {
                 await Context.Message.ReplyAsync($"Student ID {ID} is already verified to a different account. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
                 return;
@@ -73,10 +73,13 @@ namespace MarvinNG.Commands
             #endregion
 
             #region Update
-            var update = Builders<BsonDocument>.Update.Set("DiscordID", u.Id);
-            Bot.collection.UpdateOne(filter, update);
+            
+            var document = BsonDocument.Parse($"{{\"ID\":{ID}, \"DiscordID\":{u.Id} }}");
+            var db = Bot.discordCollection.InsertOneAsync(document);
+
             var r = u.AddRoleAsync(Bot.memberRole);
             await r;
+            await db;
             #endregion
             await ReplyAsync($"Succesfully verified <@{u.Id}> as {y["Name"].ToString()}");
         }
@@ -107,7 +110,7 @@ namespace MarvinNG.Commands
 
             #region Check Discord Account is not already verified
             Console.WriteLine(Convert.ToString(u.Id));
-            var xs = Bot.collection.Find($"{{ DiscordID: '{u.Id}' }}");
+            var xs = Bot.discordCollection.Find($"{{ DiscordID: '{u.Id}' }}");
             if (xs.CountDocuments() != 0)
             {
                 var x = xs.First();
@@ -144,8 +147,7 @@ namespace MarvinNG.Commands
             var filter = Builders<BsonDocument>.Filter.Eq("DiscordID", uid);
 
             #region Update
-            var update = Builders<BsonDocument>.Update.Set<string>("DiscordID", null);
-            Bot.collection.UpdateOne(filter, update);
+            Bot.discordCollection.DeleteOne(filter);
 
             #endregion
             await ReplyAsync($"Succesfully unverified <@{uid}> ");
