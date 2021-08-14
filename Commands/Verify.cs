@@ -146,10 +146,10 @@ namespace MarvinNG.Commands
             #region Update
             var update = Builders<BsonDocument>.Update.Set<string>("DiscordID", null);
             Bot.collection.UpdateOne(filter, update);
-            
+
             #endregion
             await ReplyAsync($"Succesfully unverified <@{uid}> ");
-            
+
         }
     }
 
