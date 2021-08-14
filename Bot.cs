@@ -20,6 +20,10 @@ namespace MarvinNG
 {
     public class Bot
     {
+
+        public static Emoji Emoji = new Emoji("✅");
+        public static Emoji Emoji2 = new Emoji("❌");
+
         public Bot()
         {
             _client = new DiscordSocketClient();
@@ -64,7 +68,7 @@ namespace MarvinNG
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
             if (!(message.HasMentionPrefix(_client.CurrentUser, ref argPos) || (message.Channel is IDMChannel)) ||
-                message.Author.IsBot) return;
+                message.Author.IsBot) { await message.AddReactionAsync(Emoji2); return; }
 
 
             // Create a WebSocket-based command context based on the message
@@ -72,6 +76,7 @@ namespace MarvinNG
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
+            await message.AddReactionAsync(Emoji);
             await _commands.ExecuteAsync(
                 context: context,
                 argPos: argPos,
