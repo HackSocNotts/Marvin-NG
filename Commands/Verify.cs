@@ -22,7 +22,7 @@ namespace MarvinNG.Commands
         [Summary("Verifies A User")]
         public async Task Verify(uint ID, string user = null)
         {
-
+            Console.WriteLine($"Verify Called by {Context.User.Username} on id {ID}");
 
             #region get user object
             SocketGuildUser u;
@@ -31,6 +31,7 @@ namespace MarvinNG.Commands
                 var m = regex.Match(user);
                 if (!m.Success)
                 {
+                    Console.WriteLine($"Finding user Failed");
                     return;
                 }
                 var id = Convert.ToUInt64(m.Value);
@@ -40,6 +41,7 @@ namespace MarvinNG.Commands
             {
                 u = Bot.server.GetUser(Context.Message.Author.Id);
             }
+            Console.WriteLine($"Trying to Verify {u.Username}");
             #endregion
 
             #region Check Discord Account is not already verified
@@ -48,7 +50,7 @@ namespace MarvinNG.Commands
             if (xs.CountDocuments() != 0)
             {
                 var x = xs.First();
-                await Context.Message.ReplyAsync(String.Format("User <@{0}> is Already verified with StudentID {1}", u.Id, x["ID"].ToString()));
+                await Context.Message.ReplyAsync($"User <@{u.Id}> is Already verified with StudentID {x["ID"].ToString()}");
                 return;
             }
             #endregion
@@ -58,14 +60,14 @@ namespace MarvinNG.Commands
             xs = Bot.collection.Find(filter);
             if (xs.CountDocuments() == 0)
             {
-                await Context.Message.ReplyAsync(String.Format("Cannot Find User with ID {0} amongst our records. Open a Ticket in <#{1}> to get this sorted", ID, Bot.helpChannel));
+                await Context.Message.ReplyAsync($"Cannot Find User with ID {ID} amongst our records. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
                 return;
             }
 
             var y = xs.First();
             if (!y["DiscordID"].IsBsonNull)
             {
-                await Context.Message.ReplyAsync(String.Format("Student ID {0} is already verified to a different account. Open a Ticket in <#{1}> to get this sorted", ID, Bot.helpChannel));
+                await Context.Message.ReplyAsync($"Student ID {ID} is already verified to a different account. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
                 return;
             }
             #endregion
@@ -76,7 +78,7 @@ namespace MarvinNG.Commands
             var r = u.AddRoleAsync(Bot.memberRole);
             await r;
             #endregion
-            await ReplyAsync(String.Format("Succesfully verified <@{0}> as {1}", u.Id, y["Name"].ToString()));
+            await ReplyAsync($"Succesfully verified <@{u.Id}> as {y["Name"].ToString()}");
         }
 
         [Command("lookup")]
@@ -90,6 +92,7 @@ namespace MarvinNG.Commands
                 var m = regex.Match(user);
                 if (!m.Success)
                 {
+                    Console.WriteLine("Finding user Failed");
                     return;
                 }
                 var id = Convert.ToUInt64(m.Value);
@@ -99,6 +102,7 @@ namespace MarvinNG.Commands
             {
                 u = Bot.server.GetUser(Context.Message.Author.Id);
             }
+            Console.WriteLine($"Looking up user {u.Username}");
             #endregion
 
             #region Check Discord Account is not already verified
@@ -107,11 +111,11 @@ namespace MarvinNG.Commands
             if (xs.CountDocuments() != 0)
             {
                 var x = xs.First();
-                await Context.Message.ReplyAsync(String.Format("User <@{0}> is verified with StudentID {1}", u.Id, x["ID"].ToString()));
+                await Context.Message.ReplyAsync($"User <@{u.Id}> is verified with StudentID {x["ID"].ToString()}");
             }
             else
             {
-                await Context.Message.ReplyAsync(String.Format("User <@{0}> is not verified on this server!", u.Id));
+                await Context.Message.ReplyAsync($"User <@{u.Id}> is not verified on this server!");
             }
             #endregion
         }
@@ -144,7 +148,7 @@ namespace MarvinNG.Commands
             Bot.collection.UpdateOne(filter, update);
             
             #endregion
-            await ReplyAsync(String.Format("Succesfully unverified <@{0}> ", uid));
+            await ReplyAsync($"Succesfully unverified <@{uid}> ");
             
         }
     }
