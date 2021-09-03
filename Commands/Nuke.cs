@@ -29,7 +29,7 @@ namespace MarvinNG.Commands
             if (hasAdnin)
             {
 
-                await Bot.collection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
+                await Bot.discordCollection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
 
                 Console.WriteLine(Bot.memberRole.Members.Count());
                 List<Task> t = new List<Task>();

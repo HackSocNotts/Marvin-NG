@@ -20,9 +20,13 @@ namespace MarvinNG
 {
     public class Bot
     {
+
         public Bot()
         {
-            _client = new DiscordSocketClient();
+            var conf = new DiscordSocketConfig();
+            conf.AlwaysDownloadUsers = true;
+
+            _client = new DiscordSocketClient(conf);
             _commands = new CommandService();
 
             string botToken = Environment.GetEnvironmentVariable("botToken");
@@ -34,7 +38,8 @@ namespace MarvinNG
 
             var client = new MongoClient(new MongoUrl(mongoUrl));
             var database = client.GetDatabase(mongoCollection);
-            collection = database.GetCollection<BsonDocument>("members");
+            membersCollection = database.GetCollection<BsonDocument>("members");
+            discordCollection = database.GetCollection<BsonDocument>("members_discord");
 
             helpChannel = Convert.ToUInt64(Environment.GetEnvironmentVariable("helpChannel"));
         }
@@ -60,6 +65,7 @@ namespace MarvinNG
             int argPos = 0;
 
             server = _client.GetGuild(Convert.ToUInt64(Environment.GetEnvironmentVariable("server")));
+            Console.WriteLine($"Connected to {server.Name}");
             memberRole = server.GetRole(Convert.ToUInt64(Environment.GetEnvironmentVariable("memberRole")));
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
@@ -72,6 +78,7 @@ namespace MarvinNG
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
+
             await _commands.ExecuteAsync(
                 context: context,
                 argPos: argPos,
@@ -94,7 +101,7 @@ The Committee");
         private CommandService _commands;
         private Task loginAwaiter;
         private Task commandAwaiter;
-        public static IMongoCollection<BsonDocument> collection;
+        public static IMongoCollection<BsonDocument> membersCollection, discordCollection;
         public static SocketRole memberRole;
         public static SocketGuild server;
 
