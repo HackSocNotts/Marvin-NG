@@ -60,14 +60,14 @@ namespace MarvinNG.Commands
             xs = Bot.membersCollection.Find(filter);
             if (xs.CountDocuments() == 0)
             {
-                await Context.Message.ReplyAsync($"Cannot Find User with ID {ID} amongst our records. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
+                await Context.Message.ReplyAsync($"Cannot Find User with ID {ID} amongst our records. Ask for help in <#{Bot.helpChannel}> to get this sorted");
                 return;
             }
             var y = xs.First();
             var zs = Bot.discordCollection.Find(filter);
             if (zs.CountDocuments() != 0)
             {
-                await Context.Message.ReplyAsync($"Student ID {ID} is already verified to a different account. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
+                await Context.Message.ReplyAsync($"Student ID {ID} is already verified to a different account. Ask for help in <#{Bot.helpChannel}> to get this sorted");
                 return;
             }
             #endregion

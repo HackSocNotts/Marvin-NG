@@ -88,12 +88,12 @@ namespace MarvinNG
         private async Task HandleMemberJoin(SocketGuildUser user)
         {
             await user.SendMessageAsync($@"Hi <@{user.Id}> :wave:
-Thanks for joining the HackSoc Discord Server!
+Thanks for joining the UoN Maths Discord Server!
 To get started you need to verify your membership with me.
-Please respond with verify followed by your student ID number (for example `verify 12312123`) so I can verify that you are a HackSoc member.
-If you believe this is in error, or something goes wrong, please raise a ticket in <#{helpChannel}> for help.
+Please respond with verify followed by your student ID number (for example `verify 12312123`) so I can verify that you are a UoN student.
+If you believe this is in error, or something goes wrong, please ask for help in <#{helpChannel}>.
 Thanks,
-The Committee");
+UoN Discord Mentors");
         }
 
 
