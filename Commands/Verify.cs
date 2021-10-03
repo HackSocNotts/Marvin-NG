@@ -12,47 +12,31 @@ namespace MarvinNG.Commands
 {
 	public class _Verify : ModuleBase<SocketCommandContext>
 	{
-		private static Regex regex = new(@"\d+");
+		private static readonly Regex GuildUserIdRegex = new(@"^\d+$");
 
 		[Command("verify")]
 		[Summary("Verifies A User")]
-		public async Task Verify(uint ID, string user = null)
+		public async Task Verify(uint studentId, string user = null)
 		{
-			Console.WriteLine($"Verify Called by {Context.User.Username} on id {ID}");
+			Console.WriteLine($"Verify Called by {Context.User.Username} on id {studentId}");
 
 			#region get user object
 
-			SocketGuildUser u;
-			if (user != null)
-			{
-				var m = regex.Match(user);
-				if (!m.Success)
-				{
-					Console.WriteLine($"Finding user Failed");
-					return;
-				}
+			var guildUser = GetGuildUser(user);
 
-				var id = Convert.ToUInt64(m.Value);
-				u = Bot.server.GetUser(id);
-			}
-			else
-			{
-				u = Bot.server.GetUser(Context.Message.Author.Id);
-			}
-
-			Console.WriteLine($"Trying to Verify {u.Username}");
+			Console.WriteLine($"Trying to verify {guildUser.Username}");
 
 			#endregion
 
 			#region Check Discord Account is not already verified
 
-			Console.WriteLine(Convert.ToString(u.Id));
-			var xs = Bot.discordCollection.Find($"{{ DiscordID: '{u.Id}' }}");
-			if (xs.CountDocuments() != 0)
+			Console.WriteLine(Convert.ToString(guildUser.Id));
+			var xs = Bot.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
+			if (await xs.CountDocumentsAsync() != 0)
 			{
 				var x = xs.First();
 				await Context.Message.ReplyAsync(
-					$"User <@{u.Id}> is Already verified with StudentID {x["ID"]}");
+					$"User <@{guildUser.Id}> is Already verified with StudentID {x["ID"]}");
 				return;
 			}
 
@@ -60,21 +44,21 @@ namespace MarvinNG.Commands
 
 			#region Check StudentID is not already verified
 
-			var filter = Builders<BsonDocument>.Filter.Eq("ID", ID);
-			xs = Bot.membersCollection.Find(filter);
-			if (xs.CountDocuments() == 0)
+			var filter = Builders<BsonDocument>.Filter.Eq("ID", studentId);
+			xs = Bot.MembersCollection.Find(filter);
+			if (await xs.CountDocumentsAsync() == 0)
 			{
 				await Context.Message.ReplyAsync(
-					$"Cannot Find User with ID {ID} amongst our records. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
+					$"Cannot Find User with ID {studentId} amongst our records. Open a Ticket in <#{Bot.HelpChannel}> to get this sorted");
 				return;
 			}
 
 			var y = xs.First();
-			var zs = Bot.discordCollection.Find(filter);
-			if (zs.CountDocuments() != 0)
+			var zs = Bot.DiscordCollection.Find(filter);
+			if (await zs.CountDocumentsAsync() != 0)
 			{
 				await Context.Message.ReplyAsync(
-					$"Student ID {ID} is already verified to a different account. Open a Ticket in <#{Bot.helpChannel}> to get this sorted");
+					$"Student ID {studentId} is already verified to a different account. Open a Ticket in <#{Bot.HelpChannel}> to get this sorted");
 				return;
 			}
 
@@ -82,58 +66,42 @@ namespace MarvinNG.Commands
 
 			#region Update
 
-			var document = BsonDocument.Parse($"{{\"ID\":{ID}, \"DiscordID\":{u.Id} }}");
-			var db = Bot.discordCollection.InsertOneAsync(document);
+			var document = BsonDocument.Parse($"{{\"ID\":{studentId}, \"DiscordID\":{guildUser.Id} }}");
+			var db = Bot.DiscordCollection.InsertOneAsync(document);
 
-			var r = u.AddRoleAsync(Bot.memberRole);
+			var r = guildUser.AddRoleAsync(Bot.MemberRole);
 			await r;
 			await db;
 
 			#endregion
 
-			await ReplyAsync($"Succesfully verified <@{u.Id}> as {y["Name"]}");
+			await ReplyAsync($"Succesfully verified <@{guildUser.Id}> as {y["Name"]}");
 		}
 
 		[Command("lookup")]
 		[Summary("Looks up A User")]
-		public async Task Lookup(uint ID, string user = null)
+		public async Task Lookup(string user)
 		{
 			#region get user object
 
-			SocketGuildUser u;
-			if (user != null)
-			{
-				var m = regex.Match(user);
-				if (!m.Success)
-				{
-					Console.WriteLine("Finding user Failed");
-					return;
-				}
+			var guildUser = GetGuildUser(user);
 
-				var id = Convert.ToUInt64(m.Value);
-				u = Bot.server.GetUser(id);
-			}
-			else
-			{
-				u = Bot.server.GetUser(Context.Message.Author.Id);
-			}
-
-			Console.WriteLine($"Looking up user {u.Username}");
+			Console.WriteLine($"Looking up user {guildUser.Username}");
 
 			#endregion
 
 			#region Check Discord Account is not already verified
 
-			Console.WriteLine(Convert.ToString(u.Id));
-			var xs = Bot.discordCollection.Find($"{{ DiscordID: '{u.Id}' }}");
-			if (xs.CountDocuments() != 0)
+			Console.WriteLine(Convert.ToString(guildUser.Id));
+			var xs = Bot.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
+			if (await xs.CountDocumentsAsync() != 0)
 			{
 				var x = xs.First();
-				await Context.Message.ReplyAsync($"User <@{u.Id}> is verified with StudentID {x["ID"]}");
+				await Context.Message.ReplyAsync($"User <@{guildUser.Id}> is verified with StudentID {x["ID"]}");
 			}
 			else
 			{
-				await Context.Message.ReplyAsync($"User <@{u.Id}> is not verified on this server!");
+				await Context.Message.ReplyAsync($"User <@{guildUser.Id}> is not verified on this server!");
 			}
 
 			#endregion
@@ -144,35 +112,37 @@ namespace MarvinNG.Commands
 		public async Task Clear(string user)
 		{
 			#region get user object
-
-			ulong uid;
-			var m = regex.Match(user);
-			if (!m.Success)
-			{
-				return;
-			}
-
-			uid = Convert.ToUInt64(m.Value);
-			var u = Bot.server.GetUser(uid);
+			
+			var guildUser = GetGuildUser(user);
 
 			#endregion
 
 			#region remove memberRole
 
-			if (u != null && u.Roles.Contains(Bot.memberRole))
-				await u.RemoveRoleAsync(Bot.memberRole);
+			if (guildUser.Roles.Contains(Bot.MemberRole))
+				await guildUser.RemoveRoleAsync(Bot.MemberRole);
 
 			#endregion
 
-			var filter = Builders<BsonDocument>.Filter.Eq("DiscordID", uid);
+			var filter = Builders<BsonDocument>.Filter.Eq("DiscordID", guildUser.Id);
 
 			#region Update
 
-			await Bot.discordCollection.DeleteOneAsync(filter);
+			await Bot.DiscordCollection.DeleteOneAsync(filter);
 
 			#endregion
 
-			await ReplyAsync($"Successfully unverified <@{uid}> ");
+			await ReplyAsync($"Successfully unverified <@{guildUser.Id}> ");
+		}
+
+		private SocketGuildUser GetGuildUser(string userIdString)
+		{
+			var user = Bot.Server.GetUser(Context.Message.Author.Id);
+			if (userIdString != null && GuildUserIdRegex.Match(userIdString).Success)
+				user = Bot.Server.GetUser(Convert.ToUInt64(userIdString)) ?? user;
+			else
+				Console.WriteLine($"Failed to find guild user with id {userIdString}");
+			return user;
 		}
 	}
 }

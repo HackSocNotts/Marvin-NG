@@ -15,27 +15,22 @@ namespace MarvinNG.Commands
 		[Summary("Removes All User verifications")]
 		public async Task Nuke()
 		{
-			var gUser = Bot.server.GetUser(Context.Message.Author.Id);
-			var hasAdmin = gUser.Roles.Any(r => r.Permissions.Administrator);
-			Console.WriteLine(hasAdmin);
-			if (hasAdmin)
+			var guildUser = Bot.Server.GetUser(Context.Message.Author.Id);
+			if (guildUser.Roles.Any(r => r.Permissions.Administrator))
 			{
-				await Bot.discordCollection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
+				await Bot.DiscordCollection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
 
-				Console.WriteLine(Bot.memberRole.Members.Count());
+				Console.WriteLine($"Nuking {Bot.MemberRole.Members.Count()} users from {Bot.Server.Name}");
 				var t = new List<Task>();
-				foreach (var m in Bot.memberRole.Members)
+				foreach (var m in Bot.MemberRole.Members)
 				{
-					t.Add(m.RemoveRoleAsync(Bot.memberRole));
+					t.Add(m.RemoveRoleAsync(Bot.MemberRole));
 					// DM The User
 					t.Add(m.SendMessageAsync(
 						"Hi, We've Reset the Roles on our Discord, please re-verify with the command `verify {STUDENT ID}`"));
 				}
 
-				foreach (var u in t)
-				{
-					await u;
-				}
+				t.ForEach(async u => await u);
 
 				await Context.Message.ReplyAsync("Successfully Nuked All Users");
 			}
