@@ -4,37 +4,28 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using MarvinNG.Commands;
-using MongoDB.Bson;
-using MongoDB.Driver;
 
 namespace MarvinNG
 {
 	public class Bot
 	{
-		public Bot()
+		private readonly DiscordSocketClient _client;
+		private readonly CommandService _commands;
+		private readonly Task _loginAwaiter;
+		private readonly Task _commandAwaiter;
+		
+		public static SocketRole MemberRole;
+		public static SocketGuild Server;
+		
+		public Bot(string token)
 		{
 			var conf = new DiscordSocketConfig {AlwaysDownloadUsers = true};
 
 			_client = new DiscordSocketClient(conf);
 			_commands = new CommandService();
 
-			var botToken = Environment.GetEnvironmentVariable("botToken") ??
-			               throw new Exception("No bot token supplied");
-			_loginAwaiter = _client.LoginAsync(TokenType.Bot, botToken);
+			_loginAwaiter = _client.LoginAsync(TokenType.Bot, token);
 			_commandAwaiter = InstallCommandsAsync();
-
-			var mongoUrl = Environment.GetEnvironmentVariable("mongoUrl") ??
-			               throw new Exception("No mongo db url supplied");
-			var mongoCollection = Environment.GetEnvironmentVariable("mongoCollection") ??
-			                      throw new Exception("No mongo collection supplied");
-
-			var client = new MongoClient(new MongoUrl(mongoUrl));
-			var database = client.GetDatabase(mongoCollection);
-			MembersCollection = database.GetCollection<BsonDocument>("members");
-			DiscordCollection = database.GetCollection<BsonDocument>("members_discord");
-
-			HelpChannel = Convert.ToUInt64(Environment.GetEnvironmentVariable("helpChannel") ??
-			                               throw new Exception("No help channel supplied"));
 		}
 
 
@@ -53,11 +44,9 @@ namespace MarvinNG
 			// Don't process the command if it was a system message
 			if (messageParam is not SocketUserMessage message) return;
 
-			Server = _client.GetGuild(Convert.ToUInt64(Environment.GetEnvironmentVariable("server") ??
-			                                           throw new Exception("No server supplied")));
+			Server = _client.GetGuild(Program.ServerId);
 			Console.WriteLine($"Processing command from {Server.Name}");
-			MemberRole = Server.GetRole(Convert.ToUInt64(Environment.GetEnvironmentVariable("memberRole") ??
-			                                             throw new Exception("No member role id passed")));
+			MemberRole = Server.GetRole(Program.MemberId);
 
 			// Determine if the message is a command based on the prefix and make sure no bots trigger commands
 			if (message.Author.IsBot) return;
@@ -74,22 +63,10 @@ namespace MarvinNG
 Thanks for joining the HackSoc Discord Server!
 To get started you need to verify your membership with me.
 Please respond with verify followed by your student ID number (for example `verify 12312123`) so I can verify that you are a HackSoc member.
-If you believe this is in error, or something goes wrong, please raise a ticket in <#{HelpChannel}> for help.
+If you believe this is in error, or something goes wrong, please raise a ticket in <#{Program.HelpChannel}> for help.
 Thanks,
 The Committee");
 		}
-
-
-		private readonly DiscordSocketClient _client;
-		private readonly CommandService _commands;
-		private readonly Task _loginAwaiter;
-		private readonly Task _commandAwaiter;
-		
-		public static IMongoCollection<BsonDocument> MembersCollection, DiscordCollection;
-		public static SocketRole MemberRole;
-		public static SocketGuild Server;
-
-		public static ulong HelpChannel;
 
 		public async Task Run()
 		{

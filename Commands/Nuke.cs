@@ -18,7 +18,7 @@ namespace MarvinNG.Commands
 			var guildUser = Bot.Server.GetUser(Context.Message.Author.Id);
 			if (guildUser.Roles.Any(r => r.Permissions.Administrator))
 			{
-				await Bot.DiscordCollection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
+				await Program.DiscordCollection.DeleteManyAsync(FilterDefinition<BsonDocument>.Empty);
 
 				Console.WriteLine($"Nuking {Bot.MemberRole.Members.Count()} users from {Bot.Server.Name}");
 				var t = new List<Task>();

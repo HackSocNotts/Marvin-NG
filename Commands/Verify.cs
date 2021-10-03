@@ -31,7 +31,7 @@ namespace MarvinNG.Commands
 			#region Check Discord Account is not already verified
 
 			Console.WriteLine(Convert.ToString(guildUser.Id));
-			var xs = Bot.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
+			var xs = Program.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
 			if (await xs.CountDocumentsAsync() != 0)
 			{
 				var x = xs.First();
@@ -45,20 +45,20 @@ namespace MarvinNG.Commands
 			#region Check StudentID is not already verified
 
 			var filter = Builders<BsonDocument>.Filter.Eq("ID", studentId);
-			xs = Bot.MembersCollection.Find(filter);
+			xs = Program.MembersCollection.Find(filter);
 			if (await xs.CountDocumentsAsync() == 0)
 			{
 				await Context.Message.ReplyAsync(
-					$"Cannot Find User with ID {studentId} amongst our records. Open a Ticket in <#{Bot.HelpChannel}> to get this sorted");
+					$"Cannot Find User with ID {studentId} amongst our records. Open a Ticket in <#{Program.HelpChannel}> to get this sorted");
 				return;
 			}
 
 			var y = xs.First();
-			var zs = Bot.DiscordCollection.Find(filter);
+			var zs = Program.DiscordCollection.Find(filter);
 			if (await zs.CountDocumentsAsync() != 0)
 			{
 				await Context.Message.ReplyAsync(
-					$"Student ID {studentId} is already verified to a different account. Open a Ticket in <#{Bot.HelpChannel}> to get this sorted");
+					$"Student ID {studentId} is already verified to a different account. Open a Ticket in <#{Program.HelpChannel}> to get this sorted");
 				return;
 			}
 
@@ -67,7 +67,7 @@ namespace MarvinNG.Commands
 			#region Update
 
 			var document = BsonDocument.Parse($"{{\"ID\":{studentId}, \"DiscordID\":{guildUser.Id} }}");
-			var db = Bot.DiscordCollection.InsertOneAsync(document);
+			var db = Program.DiscordCollection.InsertOneAsync(document);
 
 			var r = guildUser.AddRoleAsync(Bot.MemberRole);
 			await r;
@@ -93,7 +93,7 @@ namespace MarvinNG.Commands
 			#region Check Discord Account is not already verified
 
 			Console.WriteLine(Convert.ToString(guildUser.Id));
-			var xs = Bot.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
+			var xs = Program.DiscordCollection.Find($"{{ DiscordID: '{guildUser.Id}' }}");
 			if (await xs.CountDocumentsAsync() != 0)
 			{
 				var x = xs.First();
@@ -128,7 +128,7 @@ namespace MarvinNG.Commands
 
 			#region Update
 
-			await Bot.DiscordCollection.DeleteOneAsync(filter);
+			await Program.DiscordCollection.DeleteOneAsync(filter);
 
 			#endregion
 
